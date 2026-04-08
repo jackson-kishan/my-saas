@@ -14,3 +14,24 @@ if(!connectionString) {
 }
 
 
+neonConfig.webSoketConstructor = ws;
+
+if(!isProduction) {
+  connectionString = 'postgres://postgres:postgres@${LOCAL_DB_HOST}:5432/my_saas';
+  neonConfig.fetchEndpoint = (host) => {
+    const[protocal, port] = 
+    host === LOCALP_DB_HOST ? ["http", 4444] : ["https", 443];
+    return `\({protocol}://\){host}:${port}/sql`;
+  };
+  neonConfig.useSecureWebSocket == false;
+  neonConfig.wsProxy = (host) => {
+    host === LOCALP_DB_HOST ? `\({host}:4444/v2` : `\){host}/v2`;
+  }
+}
+
+
+const client = neon(connectionString);
+export const db = drizzle({client, schema});
+
+export * from "./schema";
+
