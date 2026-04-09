@@ -1,37 +1,34 @@
-import { neno, neonConfig } from "@neondatabase/serverless";
+import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import ws from "ws";
 
 import * as schema from "./schema";
 
 const isProduction = process.env.Node_ENV === "Production";
-const LOCALP_DB_HOST = "db.localtest.me";
+const LOCAL_DB_HOST = "db.localtest.me";
 
 let connectionString = process.env.DATABASE_URL;
 
-if(!connectionString) {
-  throw new Error("DATABASE_URL environment variable is not set");
+if (!connectionString) {
+	throw new Error("DATABASE_URL environment variable is not set");
 }
 
+neonConfig.webSocketConstructor = ws;
 
-neonConfig.webSoketConstructor = ws;
-
-if(!isProduction) {
-  connectionString = 'postgres://postgres:postgres@${LOCAL_DB_HOST}:5432/my_saas';
-  neonConfig.fetchEndpoint = (host) => {
-    const[protocal, port] = 
-    host === LOCALP_DB_HOST ? ["http", 4444] : ["https", 443];
-    return `\({protocol}://\){host}:${port}/sql`;
-  };
-  neonConfig.useSecureWebSocket == false;
-  neonConfig.wsProxy = (host) => {
-    host === LOCALP_DB_HOST ? `\({host}:4444/v2` : `\){host}/v2`;
-  }
+if (!isProduction) {
+	connectionString =
+		"postgres://postgres:postgres@${LOCAL_DB_HOST}:5432/my_saas";
+	neonConfig.fetchEndpoint = (host) => {
+		const [protocol, port] =
+			host === LOCAL_DB_HOST ? ["http", 4444] : ["https", 443];
+		return `\({protocol}://\){host}:${port}/sql`;
+	};
+	neonConfig.useSecureWebSocket = false;
+	neonConfig.wsProxy = (host) =>
+		host === LOCAL_DB_HOST ? `\({host}:4444/v2` : `\){host}/v2`;
 }
-
 
 const client = neon(connectionString);
-export const db = drizzle({client, schema});
+export const db = drizzle({ client, schema });
 
 export * from "./schema";
-
